@@ -121,9 +121,12 @@
 			if(options.justSplit == true){
 				return {'id':element.attr('id'),'value':result};
 			}
-			
-			element.empty();
-			element.html(result);
+
+			if(!isMathJax(element))
+			{
+			    element.empty();
+			    element.html(result);
+			}
 		}
 		else if(options.type == 'sentences'){
 			var result  = splitSentences(initialText);
@@ -139,24 +142,37 @@
 		
 		/////////////////////////////////////////////////////////////////////
 		
-		function splitLetters(userInput){
-			
-			var arr = userInput.split("");
-			
-			for(var i=0;i<arr.length;i++) { 
-				
-				if(arr[i] == " "){
-						arr[i] = '<div class="letter-measure blank">' + arr[i] + '</div>';
-				}
-				else{
-		      
-		      		if(!arr[i].match(/\s\n\t\r/g) && arr[i]!="") arr[i] = '<div class="letter-measure">' + arr[i] + '</div>';
-		     
-		     	}
-		   }
-		   
-		   return arr.join(" ");
-		}
+        function isMathJax(element) { return element.find("span.MathJax").length != 0; }
+        function getMathJaxChildren(element) { return element.find("span.mrow").children(); }
+
+        function splitLetters(userInput)
+        {
+            if(!isMathJax(element))
+            {
+                var arr = userInput.split("");
+
+                for(var i=0;i<arr.length;i++)
+                {
+                    if(arr[i] == " ")
+                    {
+                        arr[i] = '<div class="letter-measure blank">' + arr[i] + '</div>';
+                    }
+                    else
+                    {
+                        if(!arr[i].match(/\s\n\t\r/g) && arr[i]!="") arr[i] = '<div class="letter-measure">' + arr[i] + '</div>';
+                    }
+                }
+                return arr.join(" ");
+            }
+            else
+            {
+                /* Helpful Debug:
+                console.log("splitLetters: " + userInput + " (" + element.find("span.mrow").children().length + ")");
+                element.find("span.mrow").children().each(function(mspan) {
+                    console.log(mspan + ": " + $(this).attr('id') + ": " + $(this).html());
+                });*/
+            }
+        }
 		
 		function splitWords(userInput, justSplit){
 			  var a = userInput.replace(/\n/g, " \n<br/> ").split(" ");
@@ -347,12 +363,14 @@
 		 		
 		 	}
 		 	else if(options.animation == 'matrix'){
-		 			
 		 		TMax = new TimelineMax({align:'start'});	
 		 		var parent = element.parent();
-		 		
-		 		element.children().each(function(index, value){
-		 			
+				var children = element.children();
+
+				if(isMathJax(parent))
+				    children = getMathJaxChildren(element);
+
+		 		children.each(function(index, value){
 		 			var item = $(this);
 		 			var pos = $(this).position();
 		 		
